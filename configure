@@ -1,0 +1,69 @@
+#!/bin/sh
+
+prefix=/usr/local
+bindir='${prefix}/bin'
+sbindir='${prefix}/sbin'
+sysconfdir='${prefix}/etc'
+
+enable_sbin_init=no
+services=
+
+default_services=
+
+for entry in $(ls -d data/skeleton/etc/s6-rc/source/* | grep -v '\-log'); do
+    default_services="${default_services} $(basename ${entry})"
+done
+
+usage() {
+    cat <<EOF
+Usage: ./configure [OPTION]...
+
+Defaults for the options are specified in brackets.
+
+Configuration:
+  -h, --help              display this help and exit
+
+Installation directories:
+  --prefix=PREFIX         install architecture-independent files in PREFIX
+                          [${prefix}]
+
+Fine tuning of the installation directories:
+  --bindir=DIR             user executables [PREFIX/bin]
+  --sbindir=DIR            system admin executables [PREFIX/sbin]
+  --sysconfdir=DIR         read-only single-machine data [PREFIX/etc]
+
+Optional Features:
+  --services=LIST         set service list (default: install everything)
+$(echo Available services: $default_services | \
+fold -s -w 53 | sed -e 's/^/                          /')
+EOF
+}
+
+
+
+for arg; do
+    case "$arg" in
+        --help) usage ;;
+        --prefix=*) prefix=${arg#*=} ;;
+        --bindir=*) bindir=${arg#*=} ;;
+        --sbindir=*) sbindir=${arg#*=} ;;
+        --sysconfdir=*) sysconfdir=${arg#*=} ;;
+        --services=*) services=${arg#*=} ;;
+        -* ) echo "$0: unknown option $arg" ;;
+        *=*) ;;
+    esac
+done
+
+if test -z "${services}" ; then
+    services="${default_services}"
+else
+    services="$(echo ${services} | sed -e 's/,/ /g')"
+fi
+
+rm -f Makefile
+sed -e "s;@prefix@;${prefix};g" \
+    -e "s;@bindir@;${bindir};g" \
+    -e "s;@sbindir@;${sbindir};g" \
+    -e "s;@sysconfdir@;${sysconfdir};g" \
+    -e "s;@services@;${services};g" \
+    Makefile.in > Makefile
