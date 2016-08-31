@@ -1,0 +1,28 @@
+DESTDIR =
+prefix := @prefix@
+bindir := @bindir@
+sbindir := @sbindir@
+sysconfdir := @sysconfdir@
+
+services := @services@
+services_srcdir := data/skeleton/etc/s6-rc/source
+services_dstdir := $(DESTDIR)$(sysconfdir)/s6-rc/source
+
+define sep
+
+
+endef
+
+define install-service
+	cp -a $(services_srcdir)/$(1) $(services_dstdir)
+	if test -d $(services_srcdir)/$(1)-log; then \
+		cp -a $(services_srcdir)/$(1)-log $(services_dstdir); \
+	fi
+	s6-rc-source add $(shell grep $(1) data/services.map) $(services_dstdir)
+endef
+
+all:
+
+install:
+	install -d -m 0775 $(services_dstdir)
+	$(foreach service,$(services),$(call install-service,$(service))$(sep))
