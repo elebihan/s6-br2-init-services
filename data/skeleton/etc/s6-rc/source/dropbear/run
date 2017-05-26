@@ -7,7 +7,7 @@
 if
 {
    backtick -n CONF_DIR { readlink /etc/dropbear }
-   import -u CONF_DIR
+   importas -u CONF_DIR CONF_DIR
    if -t { s6-test -L /etc/dropbear -a "$CONF_DIR" = "/var/run/dropbear" }
      ifthenelse { s6-rmrf /etc/dropbear }
                 { s6-mkdir -p /etc/dropbear }
